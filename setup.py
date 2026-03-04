@@ -32,6 +32,7 @@ setup(
             'pyrootutils',
             'rich',
             'webdataset',
+            'ffmpeg'
         ],
     },
 )

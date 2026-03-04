@@ -2,12 +2,11 @@ from typing import Dict
 
 import cv2
 import numpy as np
+import torch
 from skimage.filters import gaussian
 from yacs.config import CfgNode
-import torch
 
-from .utils import (convert_cvimg_to_tensor,
-                    expand_to_aspect_ratio,
+from .utils import (convert_cvimg_to_tensor, expand_to_aspect_ratio,
                     generate_image_patch_cv2)
 
 DEFAULT_MEAN = 255. * np.array([0.485, 0.456, 0.406])
@@ -65,7 +64,7 @@ class ViTDetDataset(torch.utils.data.Dataset):
         if True:
             # Blur image to avoid aliasing artifacts
             downsampling_factor = ((bbox_size*1.0) / patch_width)
-            print(f'{downsampling_factor=}')
+            # print(f'{downsampling_factor=}')
             downsampling_factor = downsampling_factor / 2.0
             if downsampling_factor > 1.1:
                 cvimg  = gaussian(cvimg, sigma=(downsampling_factor-1)/2, channel_axis=2, preserve_range=True)

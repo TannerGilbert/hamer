@@ -1,22 +1,23 @@
-from pathlib import Path
-import torch
 import argparse
 import os
+from pathlib import Path
+
 import cv2
 import numpy as np
+import torch
 
+torch.cuda.empty_cache()
 from hamer.configs import CACHE_DIR_HAMER
-from hamer.models import HAMER, download_models, load_hamer, DEFAULT_CHECKPOINT
+from hamer.datasets.vitdet_dataset import (DEFAULT_MEAN, DEFAULT_STD,
+                                           ViTDetDataset)
+from hamer.models import DEFAULT_CHECKPOINT, download_models, load_hamer
 from hamer.utils import recursive_to
-from hamer.datasets.vitdet_dataset import ViTDetDataset, DEFAULT_MEAN, DEFAULT_STD
 from hamer.utils.renderer import Renderer, cam_crop_to_full
 
 LIGHT_BLUE=(0.65098039,  0.74117647,  0.85882353)
 
 from vitpose_model import ViTPoseModel
 
-import json
-from typing import Dict, Optional
 
 def main():
     parser = argparse.ArgumentParser(description='HaMeR demo code')
@@ -34,7 +35,8 @@ def main():
     args = parser.parse_args()
 
     # Download and load checkpoints
-    download_models(CACHE_DIR_HAMER)
+    if not os.path.exists(CACHE_DIR_HAMER):
+        download_models(CACHE_DIR_HAMER)
     model, model_cfg = load_hamer(args.checkpoint)
 
     # Setup HaMeR model
@@ -45,8 +47,8 @@ def main():
     # Load detector
     from hamer.utils.utils_detectron2 import DefaultPredictor_Lazy
     if args.body_detector == 'vitdet':
-        from detectron2.config import LazyConfig
         import hamer
+        from detectron2.config import LazyConfig
         cfg_path = Path(hamer.__file__).parent/'configs'/'cascade_mask_rcnn_vitdet_h_75ep.py'
         detectron2_cfg = LazyConfig.load(str(cfg_path))
         detectron2_cfg.train.init_checkpoint = "https://dl.fbaipublicfiles.com/detectron2/ViTDet/COCO/cascade_mask_rcnn_vitdet_h/f328730692/model_final_f05665.pkl"
@@ -122,7 +124,7 @@ def main():
 
         # Run reconstruction on all detected hands
         dataset = ViTDetDataset(model_cfg, img_cv2, boxes, right, rescale_factor=args.rescale_factor)
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=8, shuffle=False, num_workers=0)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
         all_verts = []
         all_cam_t = []

@@ -34,7 +34,7 @@ class DefaultPredictor_Lazy:
         outputs = pred(inputs)
     """
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, device="cpu"):
         """
         Args:
             cfg: a yacs CfgNode or a omegaconf dict object.
@@ -67,7 +67,7 @@ class DefaultPredictor_Lazy:
             self.aug = mapper.augmentations
             self.input_format = mapper.image_format
 
-        self.model.eval().cuda()
+        self.model.eval().to(device)
         if test_dataset:
             self.metadata = MetadataCatalog.get(test_dataset)
         assert self.input_format in ["RGB", "BGR"], self.input_format
